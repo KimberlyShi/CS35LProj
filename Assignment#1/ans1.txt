@@ -1,0 +1,102 @@
+CS 35L Laboratory Assignment 1
+
+1. The man keyword allows you to read the manual page for a linux command. Therefore, for example, man man allows you to print all the commands that have a specific word in the man page.
+   1. man -k [command]
+   2. man man
+
+
+2. where mv and sh programs are located in the file system
+   -which sh or whereis sh
+      1. sh: /usr/bin/sh 
+   -which mv or whereis mv
+      1. mv: /usr/bin/mv or  /usr/local/cs/bin/mv
+
+
+3. executable programs
+   1. man -k ^.r$ or man -k ^[a-z]r$
+ar - create, modify, and extract from archives
+pr - convert text files for printing
+tr - translate or delete characters
+
+
+4. The actual file is /usr/bin/emacs-24.3 because /usr/bin/emacs has a soft link to /etc/alternatives/emacs. Shell commands I used:
+cd /usr/bin
+ls -l emacs* 
+	//see that emacs is pointing to /etc/alternatives/emacs
+cd /etc/alternatives
+ls -l emacs* 
+	//see that it’s /usr/bin/emacs-24.3
+
+
+5. 
+/usr/bin/gcc -v
+	From the above command, the gcc version was 4.8.5
+gcc -v
+	The plain gcc version is 9.2.0
+which gcc
+	The command shows the plain gcc is located in /usr/local/cs/bin
+The difference is that there are multiple versions of gcc installed on various file systems. For example, one is located /usr/bin and another is located /usr/local/cs/bin
+
+
+6. use command 'man chmod' to find what the symbolic modes mean.
+u+sx means set user permission to execute only and user ID upon execution. The breakdown of the symbolic mode is:
+      1. u means the permissions granted to the user who owns the file
+      2. s means set user or group on execution
+      3. x means execute/search only if the file is a directory or already has executed permission for some user (X)
+      4. + operator causes the selected file mode bits to be added to the existing file mode bits of each file
+ 
+o-w removes write permissions from all other users. The breakdown is:
+      1. o means the permissions granted to users that are in neither of the user or file’s group
+      2. w means write
+      3. - causes the selected file mode bits to be removed
+    
+  
+7. general command: find DIR_PATH -type d -mtime -N_DAYS
+   1. find /usr/local/cs -type d -mtime -28
+Output (first 5):
+/usr/local/cs
+/usr/local/cs/src/bison
+/usr/local/cs/src/bison/RCS
+/usr/local/cs/src/gnuplot
+/usr/local/cs/src/gnuplot/RCS
+Total: 175 using the shell command find /usr/local/cs -type d -mtime -28 | wc
+
+
+8. find /usr/bin -type l | wc
+There are 280 symbolic links.
+
+
+9. ls -lt pathName so I used the command ls -lt /usr/lib64
+   1. The oldest regular file in the /usr/lib64 directory is librom1394.so.0.3.0 with last-modified time being December 28, 2013.
+
+
+10. man locale /pathName
+The  locale command displays information about the current locale, or all locales, on standard output.
+
+
+11. C-h a downcase has 3: downcase-dwim, downcase-region, downcase-word
+      1. downcase-dwim M-x ... RET -Downcase words in the region, if active; if not, downcase word at point.
+      2. downcase-region C-x C-l -Convert the region to lower case.  In programs, wants two arguments.
+      3. downcase-word M-l --Convert to lowercase from point to end of word, moving over.
+
+
+12.    
+   1. C-h c C-M-r runs the command Regexp I-search backward.
+   2. C-h c C-M-s runs the command isearch-forward-regexp
+   3. C-h c C-M-t runs the command transpose-sexps
+   4. C-h c C-M-u runs the command backward-up-list
+   5. C-h c C-M-v runs the command scroll-other-window
+
+
+13. C-h c C-g runs the command keyboard-quit. Another one is C-s C-g
+
+
+14. C-h f yank or C-h k C-y
+Reinsert ("paste") the last stretch of killed text. More precisely, reinsert the most recent kill, which is the stretch of killed text most recently killed OR yanked.
+
+
+15.    
+   1. emacs C-x d /usr/bin for the directory listing of the emacs file
+   2. ls -l
+      1. ls -l /usr/bin had 2856 outputs
+   3. The difference is C-x d (dired command) displays all files, including hidden and regular files. C-x d command also allows you to perform operations on those files. On the other hand, ls -l just lists all the files.

@@ -1,0 +1,191 @@
+Lab 9
+
+On the SEASnet GNU/Linux host, I changed into the directory:
+cd ~eggert/src/gnu/emacs-CS-35L
+
+1. 
+a. To check how much disk space is used in the directory:
+
+du -sh ~eggert/src/gnu/emacs-CS-35L
+This was the output:
+509M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L
+
+du is the disk usage command to estimate space usage
+-s is to summarize the total
+-h is so that its human readable.
+
+Therefore, we know that the directory takes up 509 Megabytes.
+
+b. To check how much is used to represent the Git repository:
+When I ran (ls -a) I could see all the files:
+ du -sh ~eggert/src/gnu/emacs-CS-35L/.git
+
+This was the output:
+350M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/.git
+
+c. File(s) that consume most of the repository space
+
+du -hs * | sort -rh | head -5
+71M	lisp
+20M	src
+17M	doc
+15M	test
+12M	admin
+
+du -h ~eggert/src/gnu/emacs-CS-35L/ | sort -rh | head -10
+509M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/
+350M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/.git
+342M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/.git/objects
+335M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/.git/objects/pack
+71M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/lisp
+20M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/src
+17M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/doc
+15M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/test
+12M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/admin
+11M	/u/cs/fac/eggert/src/gnu/emacs-CS-35L/test/manual
+
+We see from the two commands that biggest files inside the repository space
+is .git (350 M) and within is objects (342 M) and within is pack (335 M)
+This is be because the Git repository is holding many objects.
+
+2.
+a. Number of local branches in the repository
+git branch | wc -l
+176
+
+b. Number of remote branches in the repository
+git branch -r | wc -l
+177
+
+(Note: to see all branches use git branch -a)
+
+3. 
+a. Number of remote repositories
+git remote -v
+
+This is the following output:
+origin	https://git.savannah.gnu.org/git/emacs.git (fetch)
+origin	https://git.savannah.gnu.org/git/emacs.git (push)
+
+There is 1 remote repos
+
+b. Location of the remote repository
+The remote repository is located in the working directory 
+~eggert/src/gnu/emacs-CS-35L
+ 
+4. 10 local branches most recently commited
+git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format='%(refname:short) -  (%(color:green)%(committerdate:short)%(color:reset))'
+
+master -  (2019-11-25)
+scratch/joaot/make-completion-at-point-function -  (2019-11-20)
+feature/windows-with-utils -  (2019-11-18)
+scratch/completion-api -  (2019-11-16)
+scratch/a-modest-completion-redesign-proposal -  (2019-11-10)
+scratch/fido-mode -  (2019-11-05)
+feature/gnus-select2 -  (2019-11-03)
+feature/extend_face_id -  (2019-10-14)
+scratch/jit-lock-antiblink-cleaned-up -  (2019-10-10)
+emacs-26 -  (2019-10-07)
+
+5. Number of commits on the master branch
+git rev-list --count master
+139583
+
+6. Percentage of commits that are in any branch also in the master
+To get the count on all commits across all branches:
+git rev-list --all --count
+143910
+
+By dividing 139583/143910 * 100 = 96.99%
+Therefore, 96.99% of the commits that are in any branch are also in the master.
+
+7. 10 people who authored the most master-branch commits since 2013
+git shortlog -sn --since="01 Jan 2013"
+
+ 3691  Eli Zaretskii
+  3644  Glenn Morris
+  3604  Paul Eggert
+  1806  Lars Ingebrigtsen
+  1784  Stefan Monnier
+  1571  Michael Albinus
+   619  Dmitry Gutov
+   576  Noam Postavsky
+   471  Alan Mackenzie
+   469  Juri Linkov
+
+Note: when I ran git shortlog -sn --after="01 Jan 2013" 
+I was able to get the same output.
+
+8. Visualize the commit graph
+I first had to sign unto the SEASnet server with -X or -Y
+ssh -X kimberls@lnxsrv09.seas.ucla.edu
+cd ~eggert/src/gnu/emacs-CS-35L
+
+Commit graph: (explanation below)
+(a)     4ea37c2b8b0c5a68fde59770c3536195e0972217
+(b)	977cd6cb28a37744966ec62f70cf62659f6f302a
+(c)	625cee531623feddbe3174fad52c7db96ec60bb3
+(d)	5490ccc5ebf39759dfd084bbd31f464701a3e775
+(e)	0c06b93c1e467debd401eb0b3be4652fde14fa95
+(f)	820739bbb572b30b6ce45756c9960e48dca859af
+(g)	00e4e3e9d273a193620c3a4bb4914e555cb8e343
+(h)	49cd561dc62ea6b3fbedab7aef0f020733f4cf09
+(i)	abcb2e62dae6aa26308f7ac9efc89247f89cbe65
+(j)	98ac36efe4ce4bd3a0bca76fc73ce6c7abaa4371
+
+parent --> children
+	
+    b
+   /
+a  — … — d — … — e
+   \
+     c — … —g
+             \
+               … — h — i — … — j
+
+(a) $ gitk 4ea37c2b8b0c5a68fde59770c3536195e0972217
+The commit message is "Cope better with C++..."
+
+(b) $ gitk 977cd6cb28a37744966ec62f70cf62659f6f302a
+I see that the parent is the commit that starts with 4ea37 (a)
+The commit message is "Increment Emacs version to 27.0.50"
+
+(c) $ gitk 625cee531623feddbe3174fad52c7db96ec60bb3
+I see that the parent is also the commit that starts with 4ea37 (a)
+The time committed was at 2017-09-16 05:34:15
+The commit message is "Start emacs-26 release branch"
+
+(d) $ gitk 5490ccc5ebf39759dfd084bbd31f464701a3e775
+The parent is dee6f4a170be134fafd2d11f264952b7e030303
+I notice that the 4th parent is a) by first noticing the same commit message
+and the hash matched!
+The commit message was "Add lisp variable lcms..."
+
+(e) $ gitk 0c06b93c1e467debd401eb0b3be4652fde14fa95
+I noticed that following one of the 2 parents (96aa) that d) commit message
+and hash was the same. Therefore, d) is the parent-3 of e)
+The commit message is "Merge from origin/emacs-26"
+
+(f) $ gitk 820739bbb572b30b6ce45756c9960e48dca859af
+Many parent's down, I notice (c)'s commit message
+Therefore, (c) is a parent of (f)
+The commit message is ";* doc/emacs/display..."
+
+(g) $ gitk 00e4e3e9d273a193620c3a4bb4914e555cb8e343
+Parent: 820739bbb572b30b6ce45756c9960e48dca859af 
+Therefore, (f) is the parent of (g)
+The commit message is "Fix undecorated frame res..." 
+
+(h) $ gitk 49cd561dc62ea6b3fbedab7aef0f020733f4cf09
+I notice that the commit message of (f) is the same.
+Therefore (f) is the parent of (h)
+The commit message is "* test/lisp/tramp-test..."
+
+(i) $ gitk abcb2e62dae6aa26308f7ac9efc89247f89cbe65
+I notice that the direct parent is (h). Additionally, as a check that
+my previous relationships were correct, I see the parent of (h) is (f)
+Commit message: "Merge from origin/emacs-26"
+
+(j) $ gitk 98ac36efe4ce4bd3a0bca76fc73ce6c7abaa4371
+Because the commit messages were the same as (i), I realized
+that (j) was merging the 2 branches so (i) is a parent of (j)

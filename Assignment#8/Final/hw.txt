@@ -1,0 +1,55 @@
+Homework 8
+
+1. To generate a key pair with GNU Privacy Guard's commands:
+gpg2 --gen-key
+
+2. To check the key
+gpg2 --list-key
+
+3. Export the public key in ASCII format 
+gpg2 --armor --output hw-pubkey.asc --export Kimberly
+
+4. Grab the eeprom from BeagleBone
+scp root@192.168.7.2:/sys/bus/i2c/devices/0-0050/eeprom ~/Desktop
+
+5.Use private key created to make a detached clear signature:
+gpg2 --armor --output eeprom.sig --deteach-sign eeprom
+
+6. Verify  signature and file formatting
+gpg --verify eeprom.sig eeprom
+
+=========== Questions ==============
+1. If the other teams are observing all the bytes across the network,
+my result network will be secure. This is because between the client and server,
+all messages are SSH encrypted so the data can only be decrypted by
+the client or the server.
+
+1) Assuming that the other teams have tapped my keyboard after I completed
+all the client-server setup and have obtained the keystrokes, my network
+would subsequently be less secure because they could have access to 
+the client's password needed to log on to the server. Therefore, the other team
+could pose as the client and gain access to the network with the password.
+However, recall in the final step in the lab, we no longer needed
+password authentication because of our SSH encryption so our network
+would still be secure.
+
+2) If while booting off USB and others have physical control over the USB, then
+the other team would have access to all .ssh files. Inside the .ssh files are
+all the keys so the other team can now decrypt everything on the network
+between the client and the server. With the private key, the other team
+can now log onto the server and our server is no longer secure.
+
+
+2. The gpg2 --verify command doesn't actually verify that you personally
+created the file in question. What the command was actually doing was
+checking the target file and the detached signature and fails to check
+whether if it was actually the user who created that target file. This is
+especially problematic if an intruder created a detached signature with 
+viruses for example yet the verify command would not be able to recognize
+that the signature was created outside the machine and not by the user.
+
+A solution to this problem is creating a verification agent for my public key.
+Such verifcation agents could be certicates that can verify who owns the
+public key. That way, the intruder doesn't have access to the keys and 
+effectively implements an authentication system so that only the user 
+can access files.

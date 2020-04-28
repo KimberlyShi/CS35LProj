@@ -1,0 +1,120 @@
+#!/bin/bash
+
+if [ "$#" -eq 2 ]
+then
+startDir=$2
+fi
+
+#no operands
+if [ "$#" -eq 1 ]
+then
+startDir='.'
+fi
+
+if [ "$#" -eq 0 ]
+then
+startDir=$1
+fi
+
+IFS=$'\n'
+
+#no operands
+#if [ -z "$1" ]
+#then
+#	startDir='.'
+#fi
+
+files=$(find $startDir)
+#files=$(find $startDir -maxdepth 1 -mindepth 1)
+#if the directory doesn't exist
+if [ ! -d "$startDir" ]
+then
+        echo "ERROR: the directory doesn't exist"
+        exit 1
+fi
+
+#(If D is a symbolic link, poornames should not follow the symbolic link, and should treat it as an error just like any other non-directory.
+if [ -L "$startDir" ]
+then
+        echo "ERROR: can't follow symbolic links"
+        exit 1
+fi
+
+#if there are 3+ operands in the ar
+#if [ ! -z "$2" ]
+if [ "$#" -gt 3 ]
+then
+        echo "ERROR: can't have two or more operands"
+        exit 1
+fi
+duplicates=$(find $startDir | sort -f | uniq -Di)
+#duplicates=$(find $startDir -maxdepth 1 -mindepth 1 | sort -f | uniq -Di)
+#Condition #5
+#no 2 file names can differ in case
+#arr+=( $duplicates )
+if [ ! -z "$duplicates" ]
+then
+	arr+=( $duplicates )
+#        echo "ERROR: found duplicates"
+fi
+filesNoDup=$(find $startDir | sort -f | uniq -ui)
+#filesNoDup=$(find $startDir -maxdepth 1 -mindepth 1 | sort -f | uniq -ui)
+uniqueFiles=($filesNoDup)
+#======start for loop
+for currentFile in ${uniqueFiles[@]}
+do
+error=0
+#if it is a directpry ant the file is not readable
+if [ -d "currentFile" ] && [ ! -r "$currentFile" ]
+then
+	error=1
+#	echo "ERROR: A directory but isn't readable"
+fi
+#actualFile=$(find "$currentFile"  -exec basename {} \;)
+actualFile=$(find "$currentFile" -maxdepth 0  -exec basename {} \;)
+#Condition #1
+#must contain only ASCII letters, ‘.’, ‘-’, and ‘_’
+if [[ $actualFile =~ [^a-zA-Z_\\.-] ]]
+then
+	error=1
+#        echo "ERROR: Contain Non-ASCII, or '.' '-' '_'"
+fi
+
+#Condition #2
+#Starting directory cannot begin with a hyphen
+if [[ ${actualFile:0:1} == '-' ]]
+then
+	error=1
+#	echo "ERROR: Can't start with '-'" 
+fi
+
+#Condition #3
+#Except for ‘.’ and ‘..’, a file name component cannot start with ‘.’.
+#if [[ $currentFile =~ ^\.\.?.+ ]]
+if [[ $actualFile =~ ^\.\.?.+ ]]
+then
+	error=1
+#	echo "ERROR: Name component can't start with ."
+fi
+
+#Condition #4
+#A file name component must not contain more than 14 characters.    
+#length=`echo -n $currentFile | wc -m`
+length=`echo -n $actualFile | wc -m`
+if [ $length -gt 14 ]
+then
+	error=1
+ #       echo "Error: File name cannot have more than 14 characters"
+fi
+
+if [ "$error" -eq 1 ]
+then
+	arr+=( $currentFile )
+fi    
+done
+
+echo "${arr[@]}" | tr ' ' '\n' | uniq -u
+
+
+
+

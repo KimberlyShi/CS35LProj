@@ -1,0 +1,191 @@
+1. first download the version with the bug
+
+wget http://web.cs.ucla.edu/classes/fall19/cs35L/assign/coreutils-with-bug.tar.gz
+
+2. untar the bug
+tar -xvzf coreutils-with-bug.tar.gz
+
+3. change into the directory and configure
+ls
+cd coreutils-with-bug
+./configure
+
+4. make the file
+make
+
+However, in the make process, the following error occured:
+
+In file included from utimecmp.c:41:
+utimens.h:2:5: error: conflicting types for 'futimens'
+    2 | int futimens (int, char const *, struct timespec const [2]);
+      |     ^~~~~~~~
+In file included from utimecmp.h:25,
+                 from utimecmp.c:25:
+/usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' was here
+  373 | extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+      |            ^~~~~~~~
+make[3]: *** [Makefile:659: utimecmp.o] Error 1
+make[3]: Leaving directory '/w/home.23/cs/ugrad/kimberls/cs35L/assignment4/coreutils-with-bug/lib'
+make[2]: *** [Makefile:414: all] Error 2
+make[2]: Leaving directory '/w/home.23/cs/ugrad/kimberls/cs35L/assignment4/coreutils-with-bug/lib'
+make[1]: *** [Makefile:419: all-recursive] Error 1
+make[1]: Leaving directory '/w/home.23/cs/ugrad/kimberls/cs35L/assignment4/coreutils-with-bug'
+make: *** [Makefile:357: all] Error 2
+
+5. Apply the patch
+
+wget http://web.cs.ucla.edu/classes/fall19/cs35L/assign/coreutils.diff
+patch -p0 < coreutils.diff
+
+
+6. Reconfigure and make
+./configure
+make
+
+7. The problem with building as-is is that there was a problem with the function
+futiems. The renaming patch was able to rename the functions that were causing
+ the error at the beginning of the function. After applying the patch, no make
+errors occured.
+
+8. Reproducing the problem
+$ tmp=$(mktemp -d)
+$ cd $tmp
+$ touch -d '1918-11-11 11:00 GMT' wwi-armistice-cs35L
+$ touch now
+$ sleep 1
+$ touch now1
+$ TZ=UTC0 ls -lt --full-time wwi-armistice-cs35L now now1
+
+-rw-r--r-- 1 kimberls csugrad 0 2019-10-26 19:25:41.511741551 +0000 now1
+-rw-r--r-- 1 kimberls csugrad 0 2019-10-26 19:25:35.002542462 +0000 now
+-rw-r--r-- 1 kimberls csugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice-cs35L
+
+However, if I run the command:
+
+$ TZ=UTC0 /u/cs/ugrad/kimberls/cs35L/assignment4/coreutils-with-bug/src/ls -lt --full-time wwi-armistice-cs35L now now1
+
+The bug is reproduced in the /coreutils-with-bug/src/ls folder
+
+-rw-r--r-- 1 kimberls csugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice-cs35L
+-rw-r--r-- 1 kimberls csugrad 0 2019-10-26 20:20:58.857282006 +0000 now1
+-rw-r--r-- 1 kimberls csugrad 0 2019-10-26 20:20:52.417084918 +0000 now
+
+Where the wwi-armistice-cs35L is actually ordered before the rest of the
+ files even though 1918 was earlier in history.
+
+9. To begin using the debugger to find what went wrong:
+
+cd ~/cs35L/assignment4/coreutils-with-bug/src
+gdb ./ls
+info functions
+<RET> in order to continue seeing more
+<RET>
+<RET>
+
+Here I see that 3 of the functions are comparing time:
+2897:	static int compare_atime(V, V);
+2871:	static int compare_ctime(V, V);
+2884:	static int compare_mtime(V, V);
+
+After attempting to set breakpoints and stepping through the first 
+and second function each respectively, I wasn't able to identify any functions
+that may have caused the bug. I then moved on to the third function where
+I executed the same steps on the third function static int compare_mtime.
+
+To step out of the paging through the functions, I pressed q.
+Then to set a breakpoint, I did:
+(gdb) b compare_mtime
+Breakpoint 1 at 0x407010: compare_mtime. (2 locations)
+
+Then I ran the program:
+(gdb) run -lt
+
+After I stepped through the program using si and s, I came across:
+
+(gdb) s
+timespec_cmp (b=..., a=...) at ../lib/timespec.h:48
+48	  int diff = a.tv_sec - b.tv_sec;
+(gdb) s
+49	  return diff ? diff : a.tv_nsec - b.tv_nsec;
+
+
+Because the function was subtracting 2 values, if the numbers were so large 
+and subsequently overflowed, then the calculation of the date ordering would
+be incorrect.
+Having potentially identified the function with the bug, I quit GDB with 'q' and
+'y' to confirm.
+
+../lib/timespec.h:48 shows that the function is in the directory lib/timespec.h
+
+10. Creating a new patch file lab4.diff:
+
+Navigating to where I need to patch it:
+cd ~/coreutils-with-bug
+cp lib/timespec.h timespec.h
+
+Modify the timespec.h file to contain coreutils fixes:
+timespec_cmp (struct timespec a, struct timespec b)
+{
+  int diff = a.tv_sec - b.tv_sec;
+  return (a.tv_sec > b.tv_sec) ? 1: (a.tv_sec < b.tv_sec) ? -1 : diff;
+  //return diff ? diff : a.tv_nsec - b.tv_nsec;
+}
+
+
+Record changes on ChangeLog using the following commands:
+emacs
+C-x 4-a
+2019-10-26  Kimberly Lin Shi  <kimberls@lnxsrv07.seas.ucla.edu>
+
+        * timespec.h (timespec_cmp): Modified timespec_cmp function so that there would not be any overflow/unwanted behavior when doing subtraction on the two dates.
+
+cp ChangeLog lab4.diff
+
+Create a diff -u patch:
+diff -u lib/timespec.h timespec.h > temp4.diff
+cat temp4.diff >> lab4.diff
+
+Patch coreutils-with-bug directory:
+patch -p0 < lab4.diff
+make
+
+In the coreutils-with-bug directory, I ran the following commands again:
+$ tmp=$(mktemp -d)
+$ cd $tmp
+$ touch -d '1918-11-11 11:00 GMT' wwi-armistice-cs35L
+$ touch now
+$ sleep 1
+$ touch now1
+$ TZ=UTC0 ls -lt --full-time wwi-armistice-cs35L now now1
+
+-rw-r--r-- 1 kimberls csugrad 0 2019-10-26 22:28:32.268385899 +0000 now1
+-rw-r--r-- 1 kimberls csugrad 0 2019-10-26 22:28:26.768217704 +0000 now
+-rw-r--r-- 1 kimberls csugrad 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice-cs35L
+
+The patch is now working and the dates are displayed in the proper order,
+with the earliest date displayed last and the most recent date displayed
+at the top of the list.
+
+11. Reproduce problem in the home directory
+I made a temporary directory and tested it there
+$ mkdir testing
+$ cd testing
+$ touch -d '1918-11-11 11:00 GMT' wwi-armistice-cs35L
+$ touch now
+$ sleep 1
+$ touch now1
+$ TZ=UTC0 ls -lt --full-time wwi-armistice-cs35L now now1
+
+This was the following output:
+-rw-r--r-- 1 kimberls csugrad 0 2054-12-17 17:28:16.000000000 +0000 wwi-armistice-cs35L
+-rw-r--r-- 1 kimberls csugrad 0 2019-10-26 22:37:39.814632000 +0000 now1
+-rw-r--r-- 1 kimberls csugrad 0 2019-10-26 22:37:34.651164000 +0000 now
+
+Notice that wwi-armistice is now a date in 2054. 
+
+The SEASnet Linux servers keeps track of the timestamps using 32-bits.
+Therefore, the most significant bit is read positive which is greater than
+the signed interpretation of the number. 
+That's why 1918 would be truncated and became 2054 becuase
+1918 surpassed the system's limits of Unix Time starting from 1 January 1970.
+

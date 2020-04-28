@@ -1,0 +1,234 @@
+Lab 6
+
+1. Copy over the program simpgmp.c with 
+wget http://web.cs.ucla.edu/classes/fall19/cs35L/assign/simpgmp.c
+To build and compile:
+gcc simpgmp.c -o simgmpo -lgmp
+Had to use the linker flag -lgmp because the program uses gmp.
+
+2. To run the program to copmute 2**24
+./simpgmp 24
+The result of 2**24 is 16777216
+Then to compute 2**(2**24)
+./simpgmp 16777216
+The result number starts with 1818 and ends with 7563.
+
+To verify the number of digits, I did 
+./simpgmp 16777216 > num.txt
+wc -c num.txt returned 5050447 but since the range starts counting from 1, the 
+number of digits is verified to be 5050446.
+
+3. To see which dynamic libraries the program uses:
+ldd simgmp
+
+The output:
+	linux-vdso.so.1 =>  (0x00007ffff3936000)
+	libgmp.so.10 => /lib64/libgmp.so.10 (0x00007f2e18b23000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f2e18755000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f2e18d9b000)
+
+That means that simpgmp.c uses linux-vdso.so.1, libc.so.10, libc.so.6,
+and ld-linux-x86-64.so.2 libraries.
+
+4. To see which system calls the program uses:
+strace -c ./simpgmp 24
+
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 27.99    0.000103          10        10           mmap
+ 23.37    0.000086          14         6           mprotect
+  8.70    0.000032          11         3           open
+  8.15    0.000030          30         1           munmap
+  7.34    0.000027           9         3           close
+  6.25    0.000023           6         4           fstat
+  6.25    0.000023           6         4           brk
+  4.89    0.000018           9         2           read
+  4.89    0.000018          18         1           write
+  2.17    0.000008           8         1           arch_prctl
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.000368                    37         1 total
+
+The program does the following system calls including mmap, mprotect, open, 
+munmap, close, fstate.
+
+To examine the system calls in greater detail, I used the following commands:
+strace ./simgmp
+
+This was the following output:
+execve("./simpgmp", ["./simpgmp"], [/* 40 vars */]) = 0
+brk(NULL)                               = 0xe33000
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fa3c639e000
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=158981, ...}) = 0
+mmap(NULL, 158981, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fa3c6377000
+close(3)                                = 0
+open("/lib64/libgmp.so.10", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200\304\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=495720, ...}) = 0
+mmap(NULL, 2584736, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fa3c5f06000
+mprotect(0x7fa3c5f7c000, 2093056, PROT_NONE) = 0
+mmap(0x7fa3c617b000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x75000) = 0x7fa3c617b000
+close(3)                                = 0
+open("/lib64/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P&\2\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=2156072, ...}) = 0
+mmap(NULL, 3985888, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fa3c5b38000
+mprotect(0x7fa3c5cfb000, 2097152, PROT_NONE) = 0
+mmap(0x7fa3c5efb000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1c3000) = 0x7fa3c5efb000
+mmap(0x7fa3c5f01000, 16864, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x7fa3c5f01000
+close(3)                                = 0
+mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fa3c6376000
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7fa3c6374000
+arch_prctl(ARCH_SET_FS, 0x7fa3c6374740) = 0
+mprotect(0x7fa3c5efb000, 16384, PROT_READ) = 0
+mprotect(0x7fa3c617b000, 8192, PROT_READ) = 0
+mprotect(0x600000, 4096, PROT_READ)     = 0
+mprotect(0x7fa3c639f000, 4096, PROT_READ) = 0
+munmap(0x7fa3c6377000, 158981)          = 0
+write(2, "./simpgmp: usage: ./simpgmp expo"..., 37./simpgmp: usage: ./simpgmp exponent
+) = 37
+exit_group(1)                           = ?
++++ exited with 1 +++
+
+The calls that are related to dynamic linking:
+
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=158981, ...}) = 0
+mmap(NULL, 158981, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7fa3c6377000
+close(3) 
+
+Using the dynamic libraries ld.so, the program is able to execute system calls
+including open, fstat, mmap, and close.
+
+Another example of the relationship between dynamic linking and system calls:
+
+open("/lib64/libgmp.so.10", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200\304\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=495720, ...}) = 0
+mmap(NULL, 2584736, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7fa3c5f06000
+mprotect(0x7fa3c5f7c000, 2093056, PROT_NONE) = 0
+mmap(0x7fa3c617b000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x75000) = 0x7fa3c617b000
+close(3) 
+
+Here, the dynamic library libgmp.so.10 is loaded to make the follow system calls
+mmap, mprotect, fstat, mmap.
+
+
+Therefore, whenever the dynamic library is called, it checks whether or not
+the program is able to access the library by checking the permissions.
+Then, the following system calls are able to execute their respective functions:
+open: opens the library
+fstat: information about a file
+mmap: creates new mapping to virtual address space
+mprotect: change access protection
+close: closes the library
+
+5. List of commands to investigate
+ls /usr/bin | awk '(NR-605101374)%251 == 0'
+This was the following output:
+
+ausyscall
+debuginfo-install
+g-ir-doc-tool
+insights-client-run
+ldns-verify-zone
+nl-addr-delete
+pk12util
+sadf
+texconfig-sys
+xz
+
+6. Use ldd to investigate each command.
+
+ldd /usr/bin/ausyscall
+ldd /usr/bin/debuginfo-install
+ldd /usr/bin/g-ir-doc-tool
+ldd /usr/bin/insights-client-run
+ldd /usr/bin/ldns-verify-zone
+ldd /usr/bin/nl-addr-delete
+ldd /usr/bin/pk12util
+ldd /usr/bin/sadf
+ldd /usr/bin/texconfig-sys
+ldd /usr/bin/xz
+
+These were the following errors:
+ldd /usr/bin/debuginfo-install
+ldd /usr/bin/g-ir-doc-tool
+ldd /usr/bin/insights-client-run
+ldd /usr/bin/texconfig-sys
+
+The error that occurs says:
+not a dynamic exectuable.
+
+To investigate why the errors were occuring, I opened up each one and
+this was the following line:
+vim /usr/bin/debuginfo-install
+!/usr/bin/python
+
+vim /usr/bin/g-ir-doc-tool
+#!/usr/bin/env /usr/bin/python
+
+vim /usr/bin/insights-client-run
+#!/usr/bin/python2
+
+vim /usr/bin/texconfig-sys
+#!/bin/sh
+
+Therefore, the error messages were occuring because they were not dynamic
+executables. They were not compiled programs but scripts.
+
+6. Sorted list of every dynamic library used:
+
+After running the dynamic executables, I copied all the outputs from the ldd
+ commands above into a text file called libraries.txt.
+
+Then I ran the following command to delete the hex that followed
+cat libraries.txt | grep so | sed 's/([^()]*)$//g' | sed 's/[=][>].*//g' | sort -u
+
+To delete the hex that followed:
+sed 's/[^()]*)*)$/g'
+s/ substitute
+[^()] matches characters that are not ( or )
+$ is the end of the string
+sort -u so that there are only unique libraries
+/g apply to all matches
+
+To delete everything that follows =>
+sed 's/[=][>].*//g'
+
+This was the following output:
+	/lib64/ld-linux-x86-64.so.2 
+	libaudit.so.1 
+	libcap-ng.so.0 
+	libcrypto.so.10 
+	libc.so.6 
+	libdl.so.2 
+	libldns.so.1 
+	liblzma.so.5 
+	libm.so.6 
+	libnl-3.so.200 
+	libnl-cli-3.so.200 
+	libnl-genl-3.so.200 
+	libnl-idiag-3.so.200 
+	libnl-nf-3.so.200 
+	libnl-route-3.so.200 
+	libnspr4.so 
+	libnss3.so 
+	libnssutil3.so 
+	libpcap.so.1 
+	libplc4.so 
+	libplds4.so 
+	libpthread.so.0 
+	librt.so.1 
+	libsmime3.so 
+	libsoftokn3.so 
+	libsqlite3.so.0 
+	libssl3.so 
+	libz.so.1 
+	linux-vdso.so.1 
+
+

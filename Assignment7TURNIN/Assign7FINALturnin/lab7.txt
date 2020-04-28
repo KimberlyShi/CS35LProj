@@ -1,0 +1,291 @@
+
+1. Copy of the Diffutils repo
+git clone https://git.savannah.gnu.org/git/diffutils.git
+
+2. Get log of changes to Diffutils' master branch
+cd diffutils
+git log > git-log.txt
+
+3. A list of tags used for Diffutils
+git tag > git-tags.txt
+
+4. Generate patch for maint: quote 'like this' or "like this", not `like this
+
+git log --all --grep="maint: quote" > quote-patch.txtt format-patch -1 \
+ 62ca21c8c1a5aa3488589dcb191a4ef04ae9ed4f --stdout > quote-patch.txt
+
+This was the output:
+
+commit 62ca21c8c1a5aa3488589dcb191a4ef04ae9ed4f
+Author: Paul Eggert <eggert@cs.ucla.edu>
+Date:   Wed Jan 25 23:46:16 2012 -0800
+
+    maint: quote 'like this' or "like this", not `like this'
+    
+    This is in response to a recent change in the GNU coding standards,
+    which now suggest quoting 'like this' or "like this", instead of
+    `like this' or ``like this''.
+    * HACKING, NEWS, README, README-hacking, TODO, doc/diagmeet.note:
+    * doc/diffutils.texi, ms/config.bat, ms/config.site:
+    * src/analyze.c, src/cmp.c, src/context.c, src/diff.c:
+    * src/diff.h, src/diff3.c, src/dir.c, src/ifdef.c, src/io.c:
+    * src/sdiff.c, src/side.c, src/system.h, src/util.c:
+    * tests/help-version:
+    Quote 'like this' or "like this" in commentary.
+    * cfg.mk (old_NEWS_hash): Adjust to reflect new NEWS quoting.
+    * man/help2man: Update to 1.40.4 version, with quoting fixed as above.
+    * po/en.po: Remove translation involving `, as it's no longer needed.
+    * src/cmp.c (try_help, specify_ignore_initial, usage, main):
+    * src/diff.c (main, try_help, option_help_msgid, specify_value)
+(compare_files):
+    * src/diff3.c (main, try_help, option_help_msgid, usage)
+    (read_diff):
+    * src/dir.c (compare_names):
+    * src/sdiff.c (try_help, usage, check_child_status, main):
+    * src/util.c (finish_output):
+    * tests/help-version:
+    Quote 'like this' in output.
+
+To exit git log, I did Q.
+
+Since I now know that the commit number is  
+62ca21c8c1a5aa3488589dcb191a4ef04ae9ed4f
+To generate a patch:
+
+5. Checkout version 3.0 of Diffutils
+git checkout v3.0
+
+6. Apply quote-patch.txt to version 3.0
+patch -p1 < quote-patch.txt
+Hit enter whenever prompted for "File to patch:"
+These were the following problems I ran into:
+diff --git a/HACKING b/HACKING
+diff --git a/doc/diffutils.texi b/doc/diffutils.texi
+diff --git a/man/help2man b/man/help2man
+
+Therefore, there seems to be an issue applying the patch to HACKING,
+diffutils.texi, and help2man in addition to various hunks that failed.
+
+7. To get an overview of what happened:
+git status
+This was the following output:
+
+HEAD detached at v3.0
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   NEWS
+	modified:   README
+	modified:   TODO
+	modified:   doc/diagmeet.note
+	modified:   ms/config.bat
+	modified:   ms/config.site
+	modified:   po/en.po
+	modified:   src/analyze.c
+	modified:   src/cmp.c
+	modified:   src/context.c
+	modified:   src/diff.c
+	modified:   src/diff.h
+	modified:   src/diff3.c
+	modified:   src/dir.c
+	modified:   src/ifdef.c
+	modified:   src/io.c
+	modified:   src/sdiff.c
+	modified:   src/side.c
+	modified:   src/system.h
+	modified:   src/util.c
+	modified:   tests/help-version
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	NEWS.orig
+	README-hacking.orig
+	README-hacking.rej
+	README.orig
+	README.rej
+	cfg.mk.orig
+	cfg.mk.rej
+	git-log.txt
+	git-tags.txt
+	ms/config.site.orig
+	quote-patch.txt
+	src/cmp.c.orig
+	src/context.c.orig
+	src/diff.c.orig
+	src/diff.c.rej
+	src/diff.h.orig
+	src/diff3.c.orig
+	src/diff3.c.rej
+	src/dir.c.orig
+	src/sdiff.c.orig
+	src/system.h.orig
+	src/util.c.orig
+	tests/help-version.orig
+
+8.
+vc-diff (C-x v =)
+	Compare the work files in the current fileset to the beginning versions
+vc-revert (C-x v u)
+	Revert the work file(s) in the current VC fileset to the last revision
+diff-apply-hunk (C-c C-a)
+	Apply hunk to target file
+diff-goto-source (C-c C-c)
+	Go to the source file and line corresponding to this hunk
+
+9. Use emacs to revert all changes to files other than .c files
+Based on the files listed from git status
+These were the files that I had to revert:
+NEWS
+README
+TODO
+doc/diagmeet.note
+ms/config.bat
+ms/config.site
+po/en.po
+src/diff.h
+src/system.h
+tests/help-version
+
+For each of the files listed above, I did the following command
+emacs fileName
+C-x v u
+yes
+
+Then, for the .c files, want to undo all changes other than
+changes to character string constants
+To the following .c files, check if there were changes to character string
+constants. Therfore, for all the files:
+
+emacs fileName
+C-x v =
+
+The files with character-string changes:
+src/cmp.c
+src/diff.c
+src/diff3.c
+src/dir.c
+src/sdiff.c
+src/util.c
+
+Therefore, to the remaining .c files, I had to do an additional command
+to revert all the changes (basically all the comments):
+C-x v =
+C-u C-c C-a
+
+To the following .c files:
+src/analyze.c
+src/cmp.c
+src/context.c
+src/diff.c
+src/diff3.c
+src/dir.c
+src/ifdef.c
+src/io.c
+src/sdiff.c
+src/side.c
+src/util.c.
+
+10. Examine files src/*.c.rej
+cd src
+find *.c.rej
+This was the output:
+diff3.c.rej
+diff.c.rej
+
+Therefore, found the files rejected by path:
+src/diff3.c.rej
+src/diff.c.rej
+
+To copy rejected patches into corresponding .c files,
+I just opened the diff3.c.rej and diff.c.rej file and saw where the patches
+had attempted to change the characters in the respective .c files.
+I then manually replaced every ` with '
+
+emacs diff3.c
+emacs diff.c
+
+11. Remove all untracked files that git status warned about
+However, must move all the txt files that need to be turned in out:
+mv quote-patch.txt ..
+mv git-log.txt ..
+mv git-tag.txt ..
+
+To remove all untracked files:
+git clean -f
+
+12. git status outputs half-dozen modified files 
+cd ..
+git status
+This was the following output:
+	modified:   src/cmp.c
+	modified:   src/diff.c
+	modified:   src/diff3.c
+	modified:   src/dir.c
+	modified:   src/sdiff.c
+	modified:   src/util.c
+
+git diff outputs a patch 300-400 lines long
+
+git diff > quote-3.0-patch.txt
+cat quote-3.0-patch.txt | wc -l
+The output was 326.
+
+13. Build resulting modified version of Diffutils.
+I ran all the following commands on lnxsrv06 so I don't need to apply any 
+additional patches.
+
+From the instructions in README-hacking
+./bootstrap
+./configure
+make
+make check
+
+After the command make check, I encounter the following errors:
+basic.log Error 126
+check-TESTS Error 2
+check-am Error 2
+check-recursive Error 1
+
+However, upong further investigation, I have concluded that the patch
+still works as intended and properly replaced the characters.
+
+Verify the Diffutils does the right thing:
+diff . -
+diff: cannot compare '-' to a directory
+
+diff --help
+The following output all has the correct character '
+
+14. Sanity test using modified version of Diffuls
+
+Create 2 new directories
+cd ..
+mkdir diffutils-3.0
+mkdir diffutils-3.0-patch
+
+cp -r diffutils/src/*.c ./diffutils-3.0-patch
+
+git clone https://git.savannah.gnu.org/git/diffutils.git originalDiffutils
+cd originalDiffutils
+git checkout tags/v3.0
+cd ..
+
+Copy the unmodified version into the new directory
+cp -r originalDiffutils/src/*.c ./diffutils-3.0
+
+Run the implementation:
+diffutils/src/diff -pru diffutils-3.0 diffutils-3.0-patch > quote-3.0-test.txt
+
+15. Use diff to compare contents of quote-3.0-test.txt and quote-3.0-patch.txt
+First need to move the quote-3.0-patch.txt out:
+cd diffutils
+mv quote-3.0-patch.txt ..
+cd ..
+
+diff quote-3.0-test.txt quote-3.0-patch.txt
+
+Although at first there appears to be a lot of differences, 
+all the changes are innocuous because its a modification of ` to '.
+Some other changes are the file names but theses are also innocuous.

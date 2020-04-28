@@ -1,0 +1,77 @@
+Lab Assignment #2
+
+sort /usr/share/dict/words > words  
+wget http://web.cs.ucla.edu/classes/fall19/cs35L/assign/assign2.html
+
+tr -c 'A-Za-z' '[\n*]' < assign2.html
+This command found each character that wasn't a-zA-Z & 
+replaced with a new line.
+The only characters outputed will be  a-zA-Z with new lines in between.
+
+tr -cs 'A-Za-z' '[\n*]' < assign2.html
+This command will also find every non a-zA-Z.
+Replace with a single new line. 
+However, because of the -s, there will not be repeated new lines.
+ Every a-z A-Z will only have one new line in between with no excess new lines.
+
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort
+This command will sort all the words 
+(including repeated words and characters) in alphabetical order.
+It will then separate 'word' being a new line. 
+The lower case letters will come before the upper case letters.
+
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u
+This command is similar to the above command,
+ which sorts all the words. 
+However, with the additional -u command, all the duplicates will be removed.
+
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm - words
+There are 3 columns:
+	1. Will display all the output from the previous column.
+	2. Will display all the words from file 'words'
+	3. Will find the words in common between the 2 files
+
+tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm -23 - words 
+# ENGLISHCHECKER
+This command will check for any spelling errors. 
+Only the lines that are in both column 2&3 
+will be displayed so essentially all the unique words in 
+assign2.html will be displayed. 
+These will be the misspelled words that were not found in the file'words.'
+
+wget https://www.mauimapp.com/moolelo/hwnwdshw.htm
+mv hwnwdshw.htm hwords
+#distinct words misspelled in English
+cat assign2.html |tr -cs 'A-Za-z' '[\n*]' | tr '[:upper:]' '[:lower:]'
+ | sort -u | comm -23 - words > wrongEng
+
+wc -w wrongEng
+There are 48 misspellings in English.
+
+#distinct words misspelled in Hawaiian
+cat assign2.html | tr -cs "pk\'mnwlhaeiou" '[\n*]'
+ | tr '[:upper:]' '[:lower:]' | sort -u | comm -23 - hwords > wrongHaw
+
+wc -w wrongHaw
+There are 232 misspellings in Hawaiian.
+
+
+#find the number of misspelled words in that 
+ENGLISHCHECKER reports as misspelled but HAWAIIANCHECKER does not
+
+cat wrongEng | tr -cs "pk\'mnwlhaeiou" '[\n*]' | sort -u |
+ comm -12 - hwords > engHaw
+
+wc -w engHaw
+There are 8 distinct words.
+Ex: ke, lau
+
+#find the number of misspelled words in that 
+HAWAIIANCHECKER reports as misspelled but ENGLISHCHECKER does not
+
+cat wrongHaw  | tr -cs 'A-Za-z' '[\n*]' |  
+ sort -u | comm -12 - words > hawEng
+wc -w hawEng
+
+There are 120 distinct words.
+Ex. ail, ain

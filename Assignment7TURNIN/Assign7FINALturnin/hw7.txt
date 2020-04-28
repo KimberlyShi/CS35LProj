@@ -1,0 +1,104 @@
+Homework 7
+1. To create file:
+emacs hw7.txt
+
+2. Checkout ver 3.0 of Diffutils into new branch "quote"
+cd diffutils
+git checkout -b 'quote' 'v3.0'
+
+This was the following output:
+
+3. Install change into new branch
+patch -p1 < quote-3.0-patch.txt
+
+4. add-change-log-entry-other-window (C-x 4 a)
+This emacs command adds a new entry to the change lof file for the file
+you are editing.
+
+5. Compose ChangeLog entry for patch
+emacs quote-3.0-patch.txt
+C-x 4 a
+
+This was my text:
+2019-11-14  Kimberly Lin Shi  <kimberls@lnxsrv07.seas.ucla.edu>
+
+        * quote-3.0-patch.txt: In these	following files:
+        src/cmp.c
+        src/diff.c
+        src/diff3.c
+	src/dir.c
+        src/sdiff.c
+        src/util.c
+        A patch	was applied to those files to change ` into ' in string	constants.
+
+C-x C-c to save the ChangeLog
+
+
+6. Commit changes to new branch
+ChangeLog entry is the commit message
+
+mv quote-3.0-patch.txt ..
+git add .
+git commit -F ChangeLog
+
+7. Patch working without additional fixes
+git format-patch -1 --stdout > formatted-patch.txt
+
+8. Verification
+My partner is Alyssa Wang.
+UID: 205110851
+
+I saved my partner's patch as formatted-patch-alyssa.txt
+To verify my partner's work, I first checked out into a new branch.
+git checkout -b 'partner' 'v3.0'
+git am < formatted-patch-alyssa.txt
+./bootstrap
+./configure
+make
+make check
+
+Just like in the lab, the make check command ran into errors. However,
+upon further investigation, I noticed that the patch had worked as intended.
+
+Then, just like the lab, I tested the following commands:
+src/diff . -
+This was the following output:
+src/diff: cannot compare '-' to a directory
+
+
+src/diff --help
+Just like my patch in the lab, the patch was successful in replacing all
+` with '
+
+9. Verify ChangeLog entry works
+make distdir
+I see that a new directory was created called diffutils-3.0.1-67ba
+
+When I open the directory that was created, I can see that the ChangeLog is
+my partner's with the first couple of lines being her ChangeLog:
+
+2019-11-16  Alyssa Mei Yi Wang  <alyssaw@lnxsrv07.seas.ucla.edu>
+
+        quote \'like this\' or "like this", not `like this\'
+
+
+10. Find the newest merge not newer than 2015-01-25
+
+I opened a new terminal window and logged in with
+ssh -X kimberls@lnxsrv07.seas.ucla.edu
+cd ~eggert/src/gnu/emacs
+gitk
+
+The last merge not newer then 2015-01-25 is actually 2015-01-25
+This was the following merge:
+
+Merge branch 'master' into xwidget 2015-01-25 12:19:27
+
+Description of the subwindows:
+At the top window is the commit message in 1 column. Then the user email is 
+in the second column and lastly, the commit date and time is in the last column.
+
+Underneath the top window is the the diff on the left (can also select to view
+the 'old version' and the 'new version'.)
+
+On the right of that is either the option of 'patch' or 'tree'

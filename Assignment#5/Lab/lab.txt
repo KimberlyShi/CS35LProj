@@ -1,0 +1,168 @@
+
+1. In tr2b.c:
+In the main function:
+	-Check the length of the first argument char *from
+	and the length of the second argument char *to
+	using strlen.
+	-If the lengths are not equal, throw error with stderr and exit(1)
+	-Check for duplicates in the char *from argument
+	-Input from stdin until eof using getchar(). If char is part of
+	char *from, then output in stdout with putchar().
+To test my program:
+I first compiled with the command:
+	gcc tr2b.c -o tr2b
+Then I ran the executable using:
+	./tr2b 'abcd' 'wxyz' < someFile.txt
+To test reading from stdin:
+	./tr2b 'abcd' 'wxyz'
+	>testing abcd
+	testing wxyz
+	Control-d to exit user input
+
+2. In tr2u.c:
+Instead of getchar(), use read for each byte.
+Instead of putchar(), use write to write each byte.
+Therefore, tr2u.c will be reading directly from system calls.
+The read command is read(STDIN_FILENO, ch, size)
+The write command is write(STDOUT_FILENO, ch, size)
+To test my program:
+I first compiled with the command:
+	gcc tr2u.b -o tr2u
+Then I ran the executable using:
+	./tr2u 'abcd' 'wxyz' < someFile.txt
+To test reading from stdin:
+	./tr2u 'abcd' 'wxyz' 
+	>testing abcd
+	testing wxyz
+	Control-d to exit user input.
+
+Notice that between tr2b.c and tr2u.c are using the same commands
+and should be ran exactly the same but the implementation differed.
+
+3. strace
+I used the strace command to intercept and print out system calls
+In order to have a file containing at least 5,000,000 bytes, I created a file
+
+head --bytes=5000000 /dev/urandom > bigFile.txt
+
+a) To compare system calls when copying one file to another,
+man strace
+Notice that option -c is to report a summary for count time, calls, and
+errors on program exit.
+I used the following command
+strace -c ./tr2b 'ab' 'xy' < bigFile.txt > straceB.txt
+
+Then this is the following output:
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 28.49    0.000102          11         9           mmap
+ 17.32    0.000062          16         4           mprotect
+ 10.61    0.000038          10         4           fstat
+  8.38    0.000030          15         2           read
+  8.38    0.000030          30         1           write
+  8.38    0.000030          15         2           open
+  6.15    0.000022          22         1           munmap
+  4.19    0.000015          15         1         1 access
+  3.91    0.000014           7         2           close
+  2.23    0.000008           8         1           brk
+  1.96    0.000007           7         1           arch_prctl
+  0.00    0.000000           0         1           execve
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.000358                    29         1 total
+
+In total, there was 29 system calls when we ran tr2b.c
+
+To find how many system calls it takes for tr2u.c
+strace -c ./tr2u 'ab' 'xy' < bigFile.txt > straceU.txt
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 54.74   22.608454           5   5000000           write
+ 45.26   18.695799           4   5000002           read
+  0.00    0.000074          11         7           mmap
+  0.00    0.000047          12         4           mprotect
+  0.00    0.000025          25         1           munmap
+  0.00    0.000009           5         2           close
+  0.00    0.000009           9         1           arch_prctl
+  0.00    0.000000           0         2           open
+  0.00    0.000000           0         2           fstat
+  0.00    0.000000           0         1           brk
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+------ ----------- ----------- --------- --------- ----------------
+100.00   41.304417              10000024         1 total
+
+Then this is the following output:
+(taking a significantly longer time to run the command)
+
+With tr2u.c having a significantly more number of system calls, we see that
+tr2b.c is much more efficient. This is because tr2u.c has to read and write
+each individual byte up to the 5,000,000 bytes in that bigFile.
+
+b) Comparing system calls when copying a file to the terminal
+I used the following bommands
+strace -c ./tr2b 'ab' 'xy' < bigFile.txt
+time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 26.34    0.000059           7         9           mmap
+ 17.86    0.000040          10         4           mprotect
+ 12.05    0.000027          27         1           munmap
+  9.82    0.000022          11         2           open
+  8.04    0.000018           9         2           read
+  7.59    0.000017           4         4           fstat
+  6.70    0.000015          15         1           write
+  4.02    0.000009           9         1         1 access
+  4.02    0.000009           9         1           execve
+  1.79    0.000004           4         1           brk
+  0.89    0.000002           1         2           close
+  0.89    0.000002           2         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.000224                    29         1 total
+
+strace -c ./tr2u 'ab' 'xy' < bigFile.txt
+time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 57.09   26.081564           5   5000000           write
+ 42.91   19.605465           4   5000002           read
+  0.00    0.000086          12         7           mmap
+  0.00    0.000084          84         1           brk
+  0.00    0.000059          15         4           mprotect
+  0.00    0.000031          16         2           open
+  0.00    0.000023          23         1           munmap
+  0.00    0.000014           7         2           close
+  0.00    0.000014           7         2           fstat
+  0.00    0.000014          14         1         1 access
+  0.00    0.000011          11         1           execve
+  0.00    0.000007           7         1           arch_prctl
+
+Notice, that the number of system calls are the same as part a. 
+
+4. Using the time command to measure how fast each program is
+a) when copying one file to another
+time ./tr2b 'ab' 'xy' < bigFile.txt > timeB.txt
+
+real	0m0.005s
+user	0m0.002s
+sys	0m0.001s
+
+time ./tr2U 'ab' 'xy' < bigFile.txt > timeU.txt
+
+real	0m12.201s
+user	0m3.207s
+sys	0m8.951s
+
+b) when copying a file to terminal
+time ./tr2b 'ab' 'xy < bigFile.txt
+real	0m0.003s
+user	0m0.001s
+sys	0m0.002s
+
+time ./tr2u 'ab' 'xy' < bigFile.txt
+real	0m23.882s
+user	0m6.516s
+sys	0m17.307s
+
+Notice that between the tr2u.c and the tr2b.c, 
+tr2b.c takes a significantly shorter amount of time since tr2u.c
+has to read and write every byte while tr2b utilizes buffered I/O
+so the large size of the file doesn't require as much time for tr2b.
+

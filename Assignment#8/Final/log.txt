@@ -1,0 +1,208 @@
+Assignment 8 Lab Log
+1-4. After connecting the BeagleBone using the USB cable, I found my
+BeagleBone under the external storage devices.
+I then opened the START.htm file, which was linked to a website and
+I installed the drivers. After restarting my computer, the second step
+was highlighted.
+
+5. To ssh into my BeagleBone:
+sudo ssh root@192.168.7.2
+I then inputted my computer's password, then BeagleBone's password when prompted
+
+6. Connect the BeagleBone with wifi
+connmanctl
+connmanctl> enable wifi
+connmanctl> scan wifi
+This was the output: Scan completed for wifi
+
+conmanctly > services
+The following were all the access points:
+*AR CR3760-wifi          wifi_2cf7f1066e58_4352333736302d77696669_managed_psk
+    BeagleBone010683     wifi_2cf7f1066e58_426561676c65426f6e65303130363833_managed_none
+    BeagleBone100392     wifi_2cf7f1066e58_426561676c65426f6e65313030333932_managed_none
+    BeagleBone010781     wifi_2cf7f1066e58_426561676c65426f6e65303130373831_managed_none
+    BeagleBone-DA68      wifi_2cf7f1066e58_426561676c65426f6e652d44413638_managed_psk
+    BeagleBone010684     wifi_2cf7f1066e58_426561676c65426f6e65303130363834_managed_none
+    UCLA_WEB             wifi_2cf7f1066e58_55434c415f574542_managed_none
+    UCLA_WIFI            wifi_2cf7f1066e58_55434c415f57494649_managed_none
+    eduroam              wifi_2cf7f1066e58_656475726f616d_managed_ieee8021x
+    NESL-2.4             wifi_2cf7f1066e58_4e45534c2d322e34_managed_psk
+
+connmanctl> agent on
+conmanctl> connect wifi_2cf7f1066e58_4352333736302d77696669_managed_psk
+conmanctly> quit
+
+7. Already connected to CR3760-wifi.
+ 
+8. Find IP address of the BeagleBone using the following command:
+ifconfig
+
+This was the following output:
+Under "wlan0" this was the output:
+wlan0     Link encap:Ethernet  HWaddr 2c:f7:f1:06:6e:58  
+          inet addr:10.97.85.247  Bcast:10.97.85.255  Mask:255.255.255.0
+          inet6 addr: fe80::2ef7:f1ff:fe06:6e58/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST DYNAMIC  MTU:1500  Metric:1
+          RX packets:4428 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:864 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:1034468 (1010.2 KiB)  TX bytes:114545 (111.8 KiB)
+
+Therefore, the IP address is listed under "inet addr"
+IP Address: 10.97.85.247
+
+The IP Address is important so my partner can later ssh into my BeagleBone.
+
+9. Now that I have an Internet connectoin, update database of apt-get:
+I ran the following command:
+sudo apt-get update
+
+For forwarding support for future SSH connections to my BeagleBone,
+I installed xauth and xvfb for X11 with the following commands:
+sudo apt-get install xauth
+sudo apt-get install xvfb
+
+
+10. To check that X11 is enabled for X11 forwarding:
+On both cliet and server, will need to run the following command:
+cd /etc/ssh/ssh_config
+cd /etc/ssh/sshd_config
+
+The files did not exist.
+
+11. Install Firefox on my BeagleBone with the following command:
+sudo apt-get install firefox-esr-l10n-en-gb 
+
+My partner is Eugene Lo (UID: 905108982)
+His IP address is 10.97.85.233
+My IP address is 10.97.85.247
+
+
+=============Server Steps======================
+To set up the server:
+To install openssh-server and openssh-client on BeagleBone:
+sudo apt-get update
+sudo apt-get install openssh-server
+sudo apt-get install openssh-client
+
+To generate public and private keys:
+ssh-keygen
+
+This was the following output:
+
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa): 
+/root/.ssh/id_rsa already exists.
+Overwrite (y/n)? y
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+9f:93:87:d3:71:0a:80:d9:6a:3a:0e:98:5b:47:2b:27 root@localhost
+The key's randomart image is:
++---[RSA 2048]----+
+|                 |
+|       +         |
+|      o o        |
+|       . .       |
+|    . o S . . .  |
+| o . +   . * +   |
+|o E *     B +    |
+| o B .     +     |
+|.   .            |
++-----------------+
+
+Then my partner is the client on the server so I created a separate account:
+sudo useradd -d /home/eug -m eug
+sudo passwd eug
+
+I saved the password as 'password'
+
+I then set up the ssh directory for my partner and also changed all 
+the permssions to read, write, and execute:
+
+cd /home/eug
+sudo mkdir .ssh
+sudo chown -R eug .ssh
+sudo chmod 700 .ssh
+
+Eugene did the same steps on his server except that the directory
+name is kim
+
+==========Clinet Steps==========
+To log into my partner's BeagleBone:
+
+To create the public and private key:
+$ ssh-keygen
+This was the following output:
+
+Your identification has been saved in /home/kim/.ssh/id_rsa.
+Your public key has been saved in /home/kim/.ssh/id_rsa.pub.
+The key fingerprint is:
+45:6f:31:67:f3:5d:47:7f:31:05:7b:e7:e3:f9:ac:70 kim@804962948.lasr.cs.ucla.edu
+The key's randomart image is:
++---[RSA 2048]----+
+|          . o ==*|
+|         . . = +B|
+|          . o . B|
+|         . .   oo|
+|        S      ..|
+|              . o|
+|            . Eo |
+|             o ..|
+|              ..o|
++-----------------+
+
+I set the passphrase as password
+
+To copy my public key to the server for key-based authentication:
+It was saved to /root/.ssh/authorized_keys.
+
+ssh-copy-id -i kim@10.97.85.233
+
+To add private key to authentication agent (ssh-agent):
+eval "$(ssh-agent -s)"
+
+This was the following output:
+Agent pid 18904
+
+ssh-add
+
+Then, since it is now recognized, it will not ask for the passphrase
+again. Everything is set up so I can now ssh into my partner's BeagleBone.
+
+To test that everything was set up correctly, I ssh-ed into my partner's
+BeagleBone:
+ssh kim@10.97.85.233
+
+I then created a test file with a few random lines inside 
+and see if my partner could view it to test the server and client connection:
+vim testKim.txt
+
+My partner could view the file, thus confirming that the server and client
+connection was established correctly. Additionally, he created a file named
+test.txt on my BeagleBone and I was also able to view it on my end.
+
+To test the port forwarding by running a command on the remote host and
+getting a display on my local host:
+I logged out of my partner's BeagleBone and then ssh into the root 
+of my own BeagleBone with the reset and my partner's BeagleBone with
+X11 forwarding:
+
+sudo ssh -X root@192.168.7.2
+ssh -X kim@10.97.85.233
+
+I than ran a command on the remote host:
+xterm
+xeyes
+
+My XQaurtz was able to launch successfully with the command xterm
+and I see a graphical representation of eyes when I ran the command xeyes.
+
+To test trusted port forwarding with -Y, I ran the same command:
+sudo ssh -Y root@192.168.7.2
+ssh -Y kim@10.97.85.233
+
+When I ran xeyes, the graphical representation was still able to launch 
+successfully.

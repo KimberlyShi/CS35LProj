@@ -1,0 +1,49 @@
+#!/bin/bash 
+
+# Remove all instances of ‘?'
+sed  's/?//g' |
+
+# Remove all '<u>'
+sed 's/<u>//g' |
+
+# Remove all '<\u>'
+sed 's/<\/u>//g' |
+
+#treat ` (ASCII grave accent) as if it were ' (ASCII apostrophe)
+sed "s/\`/\'/g" |
+
+# translate upper case letters to lower case letters
+tr [:upper:] [:lower:] |
+
+# delete the ending
+sed '/<\/table>/, /<\/html>/d' |
+
+#delete the beginning body
+sed '/<!doctype/, /<\/font><\/td>/d' | 
+#deleting the first line (wasn't deleted earlier because duplicated line
+sed '1d' | #WILL NEED TO FIX!!!!!
+#sed '/<td><font/, /<\/font><|?td>/d'
+
+#only have hawaiian words (delete english words)
+sed -n '/<\/tr>/,/<\/td>/p' |
+
+#delete excessive text <td valign="top">
+sed '/<td valign=\"top\">/d' |
+
+#delete excessive text <td valign="top" align="left">
+sed '/<td valign=\"top\" align=\"left\">/d' |
+
+#delete excessive tags, including </tr> <tr> <td> </td>
+sed 's/<[^>]*>//g' |
+
+#separate all the words with a space in between into a newline
+sed 's/[ ,]/\n/g' |
+
+#remove all the empty lines
+sed '/^\s*$/d' |
+
+#sort the dictionary so that there are only unique entries
+sort -u  |
+
+#all the words are Hawaiian words and don't have any other characters
+sed "/[^pk\'mnwlhaeiou]/d"

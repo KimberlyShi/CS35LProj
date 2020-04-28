@@ -1,0 +1,114 @@
+
+1.
+-Grab the Coreutils 8.29 source code compressed tarball:
+ 	wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz
+-Verify signature:
+	wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz.sig
+-Get GNU keyring:
+	wget https://ftp.gnu.org/gnu/gnu-keyring.gpg
+-verify signature and GNU keyring:
+	gpg --verify --keyring ./gnu-keyring.gpg coreutils-8.29.tar.xz.sig
+
+2. Compile and install your copy of Coreutils
+   a) Compilation
+	-first unzip your tar file
+		tar -xf coreutils-8.29.tar.xz
+		-x extracts and -f is the file flag
+	-check the path name
+		pwd
+	-create a temporary directory
+		mkdir tempFolder
+   	-change into the directory with the package
+		cd coreutils-8.29
+   b) Installation
+	-configure
+		./configure --prefix=/u/cs/ugrad/kimberls/cs35L/\
+			assign3/tempFolder
+	-compile
+		make
+	-install the package
+		make install
+
+3. Reproduce Bug
+	-change directories into the bin
+		cd ../tempFolder
+		The command ls shows that there are 3 folders: 
+			bin, libexec, share.
+		cd bin
+	-Found bug: will display '.' and '..' inside the bin folder.
+		./ls -aA
+
+4. Apply the patch of Bug#30963 Message #10
+	-go back to the coreutils-8.29 directory
+		cd ../..
+		cd coreutils-8.29
+	-view contents of the directory
+		ls
+	-want to view the source code
+		cd src
+	-want to find the 'ls' code for what is the bug for ./ls -aA
+		ls
+	-go back to directory
+		cd ..
+	-Copy and paste the diff portion of the patch.
+		-wget https://debbugs.gnu.org/cgi/bugreport.cgi?\
+			bug=30963;msg=10;att=1;filename=0001-ls-A\
+			-now-overrides-a.patch > patchls	
+man patch
+	-Learn that patch is applying a dif file to an original
+		man patch
+	-Learned that it is patch -pnum < patchfile 
+		and want to strip one level of directory
+		patch p1 < patchTry
+
+5. make at top level of the source
+	make
+	-will only run a few short lines as opposed to the first time running
+
+	Each command executed were accessed recursively 
+		and only recompiled changed the src and man folders.
+
+	The following commands were run:
+make  all-recursive
+make[1]: Entering directory '/w/home.23/cs/ugrad/kimberls/cs35L/\
+	assign3/coreutils-8.29'
+Making all in po
+make[2]: Entering directory '/w/home.23/cs/ugrad/kimberls/\
+	cs35L/assign3/coreutils-8.29/po'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/w/home.23/cs/ugrad/kimberls/\
+	cs35L/assign3/coreutils-8.29/po'
+Making all in .
+make[2]: Entering directory '/w/home.23/cs/ugrad/kimberls/\
+	cs35L/assign3/coreutils-8.29'
+make[2]: Leaving directory '/w/home.23/cs/ugrad/kimberls/\
+	cs35L/assign3/coreutils-8.29'
+Making all in gnulib-tests
+make[2]: Entering directory '/w/home.23/cs/ugrad/kimberls/cs35L/\
+	assign3/coreutils-8.29/gnulib-tests'
+make  all-recursive
+make[3]: Entering directory '/w/home.23/cs/ugrad/kimberls/cs35L/\
+	assign3/coreutils-8.29/gnulib-tests'
+Making all in .
+make[4]: Entering directory '/w/home.23/cs/ugrad/kimberls/cs35L/\
+	assign3/coreutils-8.29/gnulib-tests'
+make[4]: Nothing to be done for 'all-am'.
+make[4]: Leaving directory '/w/home.23/cs/ugrad/kimberls/cs35L/\
+	assign3/coreutils-8.29/gnulib-tests'
+make[3]: Leaving directory '/w/home.23/cs/ugrad/kimberls/cs35L/\
+	assign3/coreutils-8.29/gnulib-tests'
+make[2]: Leaving directory '/w/home.23/cs/ugrad/kimberls/cs35L/\
+	assign3/coreutils-8.29/gnulib-tests'
+make[1]: Leaving directory '/w/home.23/cs/ugrad/kimberls/cs35L/\
+	assign3/coreutils-8.29'
+
+6. Check that the bug is fixed
+	-go into the source folder
+		cd src
+	-look at contents
+		ls -a
+			This command will still output . and ..
+		ls -aA
+			Will no longer output . and ..
+
+

@@ -1,0 +1,48 @@
+Q1: The patch improves the performance of ls becuase it is now 
+able to properly displace -a and -A. So when the user writes 
+the -A, the . and .. will not be overriden by -a and 
+will no longer display . and ..
+
+
+Q2: When adopting this patch, you need to watch out that the patch
+ will not undermine and previous behaviors or functions of the program
+ before the patch was isntalled.
+
+
+Q3. When I ran the command
+	python randline.py /dev/null
+The program would traceback to the most recent call:
+ File "randline.py", line 70, in <module>
+    main()
+  File "randline.py", line 64, in main
+    sys.stdout.write(generator.chooseline())
+  File "randline.py", line 34, in chooseline
+    return random.choice(self.lines)
+  File "/usr/local/cs/Python-2.7.16/lib/python2.7\
+	/random.py", line 277, in choice
+    return seq[int(self.random() * len(seq))]
+	  # raises IndexError if seq is empty
+IndexError: list index out of range
+
+This index error occurs because the program is expecting input 
+on line 34 when trying to access an empty line will throw an error.
+
+
+Q4. When try to run the randline.py using python3 gives the following error:
+File "randline.py", line 65
+    except IOError as (errno, strerror):
+                      ^
+SyntaxError: invalid syntax
+
+This is because in Python2, the syntax would be 
+	except IOError as (errno, strerror):
+and in Python3, the syntax should be except IOError as err:
+
+
+Q5: When I ran my program using python2 instead of python3,
+ the program functioned as expected. This is becuase the syntax
+that I had implemented in my program is compatible in both python2 
+and python3. 
+However, an exception was when the program was reading user input 
+using stdin. This is because the input function from python2 
+and python3 have different behaviors. 
